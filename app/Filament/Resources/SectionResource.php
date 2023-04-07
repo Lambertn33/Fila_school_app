@@ -20,7 +20,9 @@ class SectionResource extends Resource
 {
     protected static ?string $model = Section::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
+    protected static ?string $navigationGroup = 'Academic Management';
 
     public static function form(Form $form): Form
     {
@@ -29,7 +31,7 @@ class SectionResource extends Resource
                 TextInput::make('name')
                     ->placeholder('enter a section name')
                     ->required()
-                    ->unique(),
+                    ->unique(ignoreRecord: true),
                 Select::make('classroom_id')
                     ->relationship('classroom', 'name')
             ]);
@@ -43,7 +45,10 @@ class SectionResource extends Resource
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('classroom.name')
-                    ->sortable()
+                    ->sortable(),
+                TextColumn::make('students_count')
+                    ->label('Number of students')
+                    ->counts('students')
             ])
             ->filters([
                 //
@@ -71,5 +76,9 @@ class SectionResource extends Resource
             'create' => Pages\CreateSection::route('/create'),
             'edit' => Pages\EditSection::route('/{record}/edit'),
         ];
-    }    
+    } 
+    protected static function getNavigationBadge(): ?string
+    {
+        return self::$model::count();
+    }   
 }

@@ -27,7 +27,9 @@ class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    protected static ?string $navigationGroup = 'Students Management';
 
     public static function form(Form $form): Form
     {
@@ -38,7 +40,7 @@ class StudentResource extends Resource
                     ->required(),
 
                 TextInput::make('address')
-                    ->placeholder('student names')
+                    ->placeholder('student address')
                     ->required(),
 
                 Select::make('classroom_id')
@@ -116,5 +118,10 @@ class StudentResource extends Resource
             'create' => Pages\CreateStudent::route('/create'),
             'edit' => Pages\EditStudent::route('/{record}/edit'),
         ];
+    }
+
+    protected static function getNavigationBadge(): ?string
+    {
+        return self::$model::count();
     }
 }
