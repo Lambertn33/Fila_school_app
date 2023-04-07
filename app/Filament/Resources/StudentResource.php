@@ -2,18 +2,24 @@
 
 namespace App\Filament\Resources;
 
+use App\Exports\StudentsExport;
 use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
+use App\Http\Controllers\StudentsController;
+use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Student;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Collection;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -40,6 +46,7 @@ class StudentResource extends Resource
                     ->reactive(),
 
                 Select::make('section_id')
+                    ->label('Section')
                     ->options(function (callable $get) {
                         $classId = $get('classroom_id');
 
@@ -68,7 +75,20 @@ class StudentResource extends Resource
                     ->sortable()
             ])
             ->filters([
-                //
+                Filter::make('students_filter')
+                    ->form([
+                        Select::make('classroom_id')
+                            ->label('Filter by classroom')
+                            ->placeholder('select a classroom')
+                            ->options(Classroom::pluck('name', 'id')->toArray())
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['classroom_id'],
+                                fn (Builder $query, $record): Builder => $query->where('classroom_id', $record),
+                            );
+                    })
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -76,6 +96,9 @@ class StudentResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
+                BulkAction::make('export')
+                    ->icon('heroicon-o-document-download')
+                    ->action(fn (Collection $students) => (new StudentsExport($students))->download('students.xlsx'))
             ]);
     }
 
